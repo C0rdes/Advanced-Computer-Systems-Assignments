@@ -2,6 +2,8 @@ package com.acertainbookstore.business;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,6 +18,8 @@ import com.acertainbookstore.interfaces.StockManager;
 import com.acertainbookstore.utils.BookStoreConstants;
 import com.acertainbookstore.utils.BookStoreException;
 import com.acertainbookstore.utils.BookStoreUtility;
+
+import javafx.util.Pair;
 
 /**
  * {@link CertainBookStore} implements the {@link BookStore} and
@@ -357,7 +361,30 @@ public class CertainBookStore implements BookStore, StockManager {
 	 */
 	@Override
 	public synchronized List<Book> getTopRatedBooks(int numBooks) throws BookStoreException {
-		throw new BookStoreException();
+		if (numBooks <= 0) {
+			throw new BookStoreException("numBooks = " + numBooks + ", but it must greater than zero");
+		}
+		
+		
+		List<Entry<Integer, BookStoreBook>> list = new ArrayList<Entry<Integer, BookStoreBook>>(bookMap.entrySet() );
+		
+		Collections.sort(
+				list,
+				new Comparator<Entry<Integer, BookStoreBook>>(){
+			public int compare(Entry<Integer, BookStoreBook> book1, Entry<Integer, BookStoreBook> book2) {
+				return Float.compare(book2.getValue().getAverageRating(), book1.getValue().getAverageRating()); // Flipped for sorting in reverse order
+			}
+		});
+		
+		List<Book> retList = new ArrayList<Book>();
+		
+		for(int i = 0; i < list.size(); i++){
+			if (i == numBooks) break;
+			
+			retList.add(list.get(i).getValue().immutableBook());
+		}
+		
+		return retList;
 	}
 
 	/*
@@ -377,7 +404,37 @@ public class CertainBookStore implements BookStore, StockManager {
 	 */
 	@Override
 	public synchronized void rateBooks(Set<BookRating> bookRating) throws BookStoreException {
-		throw new BookStoreException();
+		if (bookRating == null) {
+			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+		}
+		
+		for(BookRating br : bookRating){
+			int ISBN = br.getISBN();
+			int rating = br.getRating();
+			
+			if (BookStoreUtility.isInvalidISBN(ISBN)) {
+				throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
+			}
+			
+			// Validates that an ISBN is in the bookmap.
+			if (!bookMap.containsKey(ISBN)) {
+				throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.NOT_AVAILABLE);
+			}
+			
+			// Validates that the rating is not less than zero.
+			// This is for some reason also validated in the BookStoreBook file. hmm.
+			if (BookStoreUtility.isInvalidRating(rating)){
+				throw new BookStoreException(BookStoreConstants.RATING + rating + "INVALID");
+			}
+		}
+		
+		for(BookRating br : bookRating){
+			int ISBN = br.getISBN();
+			int rating = br.getRating();
+			bookMap.get(ISBN).addRating(rating);
+		}
+		
+		
 	}
 
 	/*

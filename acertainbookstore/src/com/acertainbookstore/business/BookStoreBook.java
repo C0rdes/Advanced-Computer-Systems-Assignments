@@ -111,7 +111,7 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return the average rating
 	 */
 	public float getAverageRating() {
-		return (float) (numTimesRated == 0 ? -1.0 : totalRating / numTimesRated);
+		return numTimesRated == 0 ? -1.0f : (float) totalRating / numTimesRated;
 	}
 
 	/**

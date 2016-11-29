@@ -112,7 +112,7 @@ public final class ImmutableStockBook extends ImmutableBook implements StockBook
 	 * @see com.acertainbookstore.business.StockBook#getAverageRating()
 	 */
 	public float getAverageRating() {
-		return (float) (numTimesRated == 0 ? -1.0 : totalRating / numTimesRated);
+		return numTimesRated == 0 ? -1.0f : (float) totalRating / numTimesRated;
 	}
 
 	/*
