@@ -40,7 +40,7 @@ public class StockManagerTest {
 	private static final Integer NUM_COPIES = 5;
 
 	/** The local test. */
-	private static boolean localTest = true;
+	private static boolean localTest = false;
 
 	/** The store manager. */
 	private static StockManager storeManager;
@@ -475,6 +475,43 @@ public class StockManagerTest {
 		assertTrue(booksInStoreList.size() == 0);
 	}
 
+	/**
+	 * Test if the get books in demand function works
+	 * 
+	 * @throws BookStoreException
+	 */
+	@Test
+	public void testGetBooksInDemandOne() throws BookStoreException {
+		Set<BookCopy> booksToBuy = new HashSet<BookCopy>();
+		booksToBuy.add(new BookCopy(TEST_ISBN, NUM_COPIES+1));
+		try{
+			client.buyBooks(booksToBuy);
+			fail();
+		} catch (BookStoreException ex){
+			;
+		}
+		List<StockBook> booksInDemand = storeManager.getBooksInDemand();
+		
+		assertTrue(booksInDemand.size() == 1);
+		
+		StockBook bookInDemand = booksInDemand.get(0);
+		StockBook insertedBook = getDefaultBook();
+		
+		assertTrue(bookInDemand.getISBN() == insertedBook.getISBN());
+	}
+	
+	/**
+	 * Test if the function correctly catches if no books are in demand.
+	 * 
+	 * @throws BookStoreException
+	 */
+	@Test
+	public void testGetBooksInDemandNoneInDemand() throws BookStoreException {
+		List<StockBook> booksInDemand = storeManager.getBooksInDemand();
+		
+		assertTrue(booksInDemand.size() == 0);
+	}
+	
 	/**
 	 * Tear down after class.
 	 *
