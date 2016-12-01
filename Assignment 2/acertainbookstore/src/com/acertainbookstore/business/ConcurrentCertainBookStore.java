@@ -2,8 +2,6 @@ package com.acertainbookstore.business;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,16 +17,13 @@ import com.acertainbookstore.utils.BookStoreConstants;
 import com.acertainbookstore.utils.BookStoreException;
 import com.acertainbookstore.utils.BookStoreUtility;
 
-import javafx.util.Pair;
-
-/**
- * {@link CertainBookStore} implements the {@link BookStore} and
+/** {@link ConcurrentCertainBookStore} implements the {@link BookStore} and
  * {@link StockManager} functionalities.
  * 
  * @see BookStore
  * @see StockManager
  */
-public class CertainBookStore implements BookStore, StockManager {
+public class ConcurrentCertainBookStore implements BookStore, StockManager {
 
 	/** The mapping of books from ISBN to {@link BookStoreBook}. */
 	private Map<Integer, BookStoreBook> bookMap = null;
@@ -36,8 +31,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	/**
 	 * Instantiates a new {@link CertainBookStore}.
 	 */
-	public CertainBookStore() {
-
+	public ConcurrentCertainBookStore() {
 		// Constructors are not synchronized
 		bookMap = new HashMap<>();
 	}
@@ -48,7 +42,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * @see
 	 * com.acertainbookstore.interfaces.StockManager#addBooks(java.util.Set)
 	 */
-	public synchronized void addBooks(Set<StockBook> bookSet) throws BookStoreException {
+	public void addBooks(Set<StockBook> bookSet) throws BookStoreException {
 		if (bookSet == null) {
 			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
 		}
@@ -98,7 +92,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * @see
 	 * com.acertainbookstore.interfaces.StockManager#addCopies(java.util.Set)
 	 */
-	public synchronized void addCopies(Set<BookCopy> bookCopiesSet) throws BookStoreException {
+	public void addCopies(Set<BookCopy> bookCopiesSet) throws BookStoreException {
 		int isbn;
 		int numCopies;
 
@@ -139,7 +133,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * 
 	 * @see com.acertainbookstore.interfaces.StockManager#getBooks()
 	 */
-	public synchronized List<StockBook> getBooks() {
+	public List<StockBook> getBooks() {
 		List<StockBook> listBooks = new ArrayList<>();
 		Collection<BookStoreBook> bookMapValues = bookMap.values();
 
@@ -157,8 +151,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * com.acertainbookstore.interfaces.StockManager#updateEditorPicks(java.util
 	 * .Set)
 	 */
-	public synchronized void updateEditorPicks(Set<BookEditorPick> editorPicks) throws BookStoreException {
-
+	public void updateEditorPicks(Set<BookEditorPick> editorPicks) throws BookStoreException {
 		// Check that all ISBNs that we add/remove are there first.
 		if (editorPicks == null) {
 			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
@@ -188,7 +181,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * 
 	 * @see com.acertainbookstore.interfaces.BookStore#buyBooks(java.util.Set)
 	 */
-	public synchronized void buyBooks(Set<BookCopy> bookCopiesToBuy) throws BookStoreException {
+	public void buyBooks(Set<BookCopy> bookCopiesToBuy) throws BookStoreException {
 		if (bookCopiesToBuy == null) {
 			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
 		}
@@ -244,7 +237,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * com.acertainbookstore.interfaces.StockManager#getBooksByISBN(java.util.
 	 * Set)
 	 */
-	public synchronized List<StockBook> getBooksByISBN(Set<Integer> isbnSet) throws BookStoreException {
+	public List<StockBook> getBooksByISBN(Set<Integer> isbnSet) throws BookStoreException {
 		if (isbnSet == null) {
 			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
 		}
@@ -273,7 +266,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * 
 	 * @see com.acertainbookstore.interfaces.BookStore#getBooks(java.util.Set)
 	 */
-	public synchronized List<Book> getBooks(Set<Integer> isbnSet) throws BookStoreException {
+	public List<Book> getBooks(Set<Integer> isbnSet) throws BookStoreException {
 		if (isbnSet == null) {
 			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
 		}
@@ -303,7 +296,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * 
 	 * @see com.acertainbookstore.interfaces.BookStore#getEditorPicks(int)
 	 */
-	public synchronized List<Book> getEditorPicks(int numBooks) throws BookStoreException {
+	public List<Book> getEditorPicks(int numBooks) throws BookStoreException {
 		if (numBooks < 0) {
 			throw new BookStoreException("numBooks = " + numBooks + ", but it must be positive");
 		}
@@ -360,31 +353,8 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * @see com.acertainbookstore.interfaces.BookStore#getTopRatedBooks(int)
 	 */
 	@Override
-	public synchronized List<Book> getTopRatedBooks(int numBooks) throws BookStoreException {
-		if (numBooks <= 0) {
-			throw new BookStoreException("numBooks = " + numBooks + ", but it must greater than zero");
-		}
-		
-		
-		List<Entry<Integer, BookStoreBook>> list = new ArrayList<Entry<Integer, BookStoreBook>>(bookMap.entrySet() );
-		
-		Collections.sort(
-				list,
-				new Comparator<Entry<Integer, BookStoreBook>>(){
-			public int compare(Entry<Integer, BookStoreBook> book1, Entry<Integer, BookStoreBook> book2) {
-				return Float.compare(book2.getValue().getAverageRating(), book1.getValue().getAverageRating()); // Flipped for sorting in reverse order
-			}
-		});
-		
-		List<Book> retList = new ArrayList<Book>();
-		
-		for(int i = 0; i < list.size(); i++){
-			if (i == numBooks) break;
-			
-			retList.add(list.get(i).getValue().immutableBook());
-		}
-		
-		return retList;
+	public List<Book> getTopRatedBooks(int numBooks) throws BookStoreException {
+		throw new BookStoreException();
 	}
 
 	/*
@@ -393,16 +363,8 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * @see com.acertainbookstore.interfaces.StockManager#getBooksInDemand()
 	 */
 	@Override
-	public synchronized List<StockBook> getBooksInDemand() throws BookStoreException {
-		List<BookStoreBook> books = new ArrayList<BookStoreBook>(bookMap.values());
-		
-		List<StockBook> InDemandBooks = new ArrayList<StockBook>();
-		
-		for(BookStoreBook book : books){
-			if (book.getNumSaleMisses() > 0) InDemandBooks.add(book.immutableStockBook());
-		}
-		
-		return InDemandBooks;
+	public List<StockBook> getBooksInDemand() throws BookStoreException {
+		throw new BookStoreException();
 	}
 
 	/*
@@ -411,38 +373,8 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * @see com.acertainbookstore.interfaces.BookStore#rateBooks(java.util.Set)
 	 */
 	@Override
-	public synchronized void rateBooks(Set<BookRating> bookRating) throws BookStoreException {
-		if (bookRating == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
-		
-		for(BookRating br : bookRating){
-			int ISBN = br.getISBN();
-			int rating = br.getRating();
-			
-			if (BookStoreUtility.isInvalidISBN(ISBN)) {
-				throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
-			}
-			
-			// Validates that an ISBN is in the bookmap.
-			if (!bookMap.containsKey(ISBN)) {
-				throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.NOT_AVAILABLE);
-			}
-			
-			// Validates that the rating is not less than zero.
-			// This is for some reason also validated in the BookStoreBook file. hmm.
-			if (BookStoreUtility.isInvalidRating(rating)){
-				throw new BookStoreException(BookStoreConstants.RATING + rating + "INVALID");
-			}
-		}
-		
-		for(BookRating br : bookRating){
-			int ISBN = br.getISBN();
-			int rating = br.getRating();
-			bookMap.get(ISBN).addRating(rating);
-		}
-		
-		
+	public void rateBooks(Set<BookRating> bookRating) throws BookStoreException {
+		throw new BookStoreException();
 	}
 
 	/*
@@ -450,7 +382,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * 
 	 * @see com.acertainbookstore.interfaces.StockManager#removeAllBooks()
 	 */
-	public synchronized void removeAllBooks() throws BookStoreException {
+	public void removeAllBooks() throws BookStoreException {
 		bookMap.clear();
 	}
 
@@ -460,7 +392,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	 * @see
 	 * com.acertainbookstore.interfaces.StockManager#removeBooks(java.util.Set)
 	 */
-	public synchronized void removeBooks(Set<Integer> isbnSet) throws BookStoreException {
+	public void removeBooks(Set<Integer> isbnSet) throws BookStoreException {
 		if (isbnSet == null) {
 			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
 		}

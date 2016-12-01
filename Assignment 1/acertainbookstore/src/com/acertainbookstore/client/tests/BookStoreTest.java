@@ -451,15 +451,14 @@ public class BookStoreTest {
 	  */
 	 @Test 
 	 public void testRateBooksNegativeRating() throws BookStoreException{
-		 Set<BookRating> booksToRate1 = new HashSet<BookRating>();
-		 Set<BookRating> booksToRate2 = new HashSet<BookRating>();
-		 booksToRate1.add(new BookRating(TEST_ISBN, 5)); // Valid
-		 booksToRate2.add(new BookRating(TEST_ISBN, -1)); // Invalid
-		 
-		 client.rateBooks(booksToRate1);
+		 addBooks(12345, 1);
+		 Set<BookRating> booksToRate = new HashSet<BookRating>();
+		 booksToRate.add(new BookRating(TEST_ISBN, 5)); // Valid
+		 booksToRate.add(new BookRating(12345, -1)); // Invalid
+
 		 
 		 try{
-			 client.rateBooks(booksToRate2);
+			 client.rateBooks(booksToRate);
 			 fail();
 		 } catch (BookStoreException ex){
 			 ;
@@ -468,8 +467,8 @@ public class BookStoreTest {
 		 List<StockBook> listBooks = storeManager.getBooks();
 		 StockBook bookInList = listBooks.get(0);
 		 
-		 assertTrue(bookInList.getNumTimesRated() == 1
-				 && bookInList.getTotalRating() == 5);
+		 assertTrue(bookInList.getNumTimesRated() == 0
+				 && bookInList.getTotalRating() == 0);
 	 }
 	 
 	 @Test
